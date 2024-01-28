@@ -30,8 +30,7 @@ func (e Event) Save() error {
 	if err != nil {
 		return err
 	}
-	id, err := result.LastInsertId()
-	e.ID = id
+	_, err = result.LastInsertId()
 	return err
 }
 
@@ -69,6 +68,17 @@ func GetEventById(id int64) (*Event, error) {
 		return nil, err
 	}
 	return &e, nil
+}
+
+func (event Event) Delete() error {
+	query := "DELETE FROM events WHERE id = ?"
+	stmt, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(event.ID)
+	return err
 }
 
 func (event Event) Update() error {
