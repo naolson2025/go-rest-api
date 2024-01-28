@@ -7,10 +7,20 @@ import (
 )
 
 func main() {
+	// db.InitDB()
+	// server := gin.Default()
+
+	// routes.RegisterRoutes(server)
+	server := setupServer()
+
+	server.Run(":8080")
+}
+
+func setupServer() *gin.Engine {
 	db.InitDB()
 	server := gin.Default()
 
 	routes.RegisterRoutes(server)
 
-	server.Run(":8080")
+	return server
 }
