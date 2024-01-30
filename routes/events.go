@@ -48,6 +48,18 @@ func getEvents(context *gin.Context) {
 }
 
 func createEvent(context *gin.Context) {
+	// check if the request has a valid JWT token
+	// bc only logged in users can create events
+	token := context.Request.Header.Get("Authorization")
+
+	if token == "" {
+		context.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Not authorized",
+		})
+		return
+	}
+
+
 	var event models.Event
 	// validate against the Event struct
 	err := context.ShouldBindJSON(&event)
