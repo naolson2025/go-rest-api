@@ -50,16 +50,6 @@ func getEvents(context *gin.Context) {
 func createEvent(context *gin.Context) {
 	// check if the request has a valid JWT token
 	// bc only logged in users can create events
-	token := context.Request.Header.Get("Authorization")
-
-	if token == "" {
-		context.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Not authorized",
-		})
-		return
-	}
-
-
 	var event models.Event
 	// validate against the Event struct
 	err := context.ShouldBindJSON(&event)
@@ -72,6 +62,8 @@ func createEvent(context *gin.Context) {
 		return
 	}
 
+	userId := context.GetInt64("userId")
+	event.UserID = userId
 	err = event.Save()
 
 	if err != nil {
@@ -98,11 +90,19 @@ func updateEvent(context *gin.Context) {
 		return
 	}
 
-	_, err = models.GetEventById(eventId)
+	userId := context.GetInt64("userId")
+	event, err := models.GetEventById(eventId)
 	if err != nil {
 		fmt.Println(err)
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Could not fetch event",
+		})
+		return
+	}
+
+	if event.UserID != userId {
+		context.JSON(http.StatusUnauthorized, gin.H{
+			"message": "You are not authorized to update this event",
 		})
 		return
 	}
@@ -142,11 +142,20 @@ func deleteEvent(context *gin.Context) {
 		return
 	}
 
+	userId := context.GetInt64("userId")
+
 	event, err := models.GetEventById(eventId)
 	if err != nil {
 		fmt.Println(err)
 		context.JSON(http.StatusNotFound, gin.H{
 			"message": "Could not find event",
+		})
+		return
+	}
+
+	if event.UserID != userId {
+		context.JSON(http.StatusUnauthorized, gin.H{
+			"message": "You are not authorized to delete this event",
 		})
 		return
 	}
